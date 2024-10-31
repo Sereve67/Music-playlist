@@ -6,90 +6,83 @@
 struct Song {
     char title[50];
     char artist[50];
-    struct Song *next;
 };
 
-// Function to create a new song node
-struct Song* createSong(char *title, char *artist) {
-    struct Song newSong = (struct Song)malloc(sizeof(struct Song));
-    strcpy(newSong->title, title);
-    strcpy(newSong->artist, artist);
-    newSong->next = NULL;
-    return newSong;
+// Define a stack structure
+#define MAX_SONGS 100 // Maximum number of songs in the stack
+
+struct Stack {
+    struct Song songs[MAX_SONGS];
+    int top;
+};
+
+// Function to initialize the stack
+void initStack(struct Stack *stack) {
+    stack->top = -1;
 }
 
-// Function to add a song to the end of the playlist
-void addSong(struct Song **head, char *title, char *artist) {
-    struct Song *newSong = createSong(title, artist);
-    if (*head == NULL) {
-        *head = newSong;
-    } else {
-        struct Song *temp = *head;
-        while (temp->next != NULL) {
-            temp = temp->next;
-        }
-        temp->next = newSong;
+// Function to check if the stack is full
+int isFull(struct Stack *stack) {
+    return stack->top == MAX_SONGS - 1;
+}
+
+// Function to check if the stack is empty
+int isEmpty(struct Stack *stack) {
+    return stack->top == -1;
+}
+
+// Function to push a song onto the stack
+void push(struct Stack *stack, char *title, char *artist) {
+    if (isFull(stack)) {
+        printf("The playlist is full, cannot add more songs.\n");
+        return;
     }
+    stack->top++;
+    strcpy(stack->songs[stack->top].title, title);
+    strcpy(stack->songs[stack->top].artist, artist);
+    printf("Song added to playlist.\n");
+}
+
+// Function to pop a song from the stack
+struct Song pop(struct Stack *stack) {
+    if (isEmpty(stack)) {
+        printf("The playlist is empty.\n");
+        struct Song emptySong = {"", ""};
+        return emptySong; // Return an empty song
+    }
+    return stack->songs[stack->top--];
 }
 
 // Function to display all songs in the playlist
-void displayPlaylist(struct Song *head) {
-    if (head == NULL) {
+void displayPlaylist(struct Stack *stack) {
+    if (isEmpty(stack)) {
         printf("The playlist is empty.\n");
         return;
     }
-    struct Song *temp = head;
-    int count = 1;
-    while (temp != NULL) {
-        printf("Song %d: %s by %s\n", count, temp->title, temp->artist);
-        temp = temp->next;
-        count++;
+    printf("Current Playlist:\n");
+    for (int i = stack->top; i >= 0; i--) {
+        printf("Song %d: %s by %s\n", i + 1, stack->songs[i].title, stack->songs[i].artist);
     }
 }
 
-// Function to delete a song by title
-void deleteSong(struct Song **head, char *title) {
-    if (*head == NULL) {
+// Function to delete the top song from the playlist
+void deleteSong(struct Stack *stack) {
+    if (isEmpty(stack)) {
         printf("The playlist is empty.\n");
         return;
     }
-
-    struct Song *temp = *head;
-    struct Song *prev = NULL;
-
-    // If the song to be deleted is the head node
-    if (strcmp(temp->title, title) == 0) {
-        *head = temp->next;
-        free(temp);
-        printf("Deleted song: %s\n", title);
-        return;
-    }
-
-    // Search for the song to be deleted
-    while (temp != NULL && strcmp(temp->title, title) != 0) {
-        prev = temp;
-        temp = temp->next;
-    }
-
-    // If the song was not found
-    if (temp == NULL) {
-        printf("Song not found: %s\n", title);
-        return;
-    }
-
-    // Unlink the node and free memory
-    prev->next = temp->next;
-    free(temp);
-    printf("Deleted song: %s\n", title);
+    struct Song deletedSong = pop(stack);
+    printf("Deleted song: %s\n", deletedSong.title);
 }
 
 int main() {
-    struct Song *playlist = NULL;
+    struct Stack playlist;
+    initStack(&playlist);
     int choice;
     char title[50], artist[50];
 
     do {
-        printf("\n1. Add Song\n2. Display Playlist\n3. Delete Song\n4. Exit\nChoose an option: ");
+        printf("\n1. Add Song\n2. Display Playlist\n3. Delete Top Song\n4. Exit\nChoose an option: ");
         scanf("%d", &choice);
         getchar(); // to consume the newline character
 
@@ -103,21 +96,15 @@ int main() {
                 fgets(artist, sizeof(artist), stdin);
                 artist[strcspn(artist, "\n")] = '\0'; // remove newline character
 
-                addSong(&playlist, title, artist);
-                printf("Song added to playlist.\n");
+                push(&playlist, title, artist);
                 break;
 
             case 2:
-                printf("Current Playlist:\n");
-                displayPlaylist(playlist);
+                displayPlaylist(&playlist);
                 break;
 
             case 3:
-                printf("Enter the title of the song to delete: ");
-                fgets(title, sizeof(title), stdin);
-                title[strcspn(title, "\n")] = '\0'; // remove newline character
-
-                deleteSong(&playlist, title);
+                deleteSong(&playlist);
                 break;
 
             case 4:
@@ -132,3 +119,4 @@ int main() {
 
     return 0;
 }
+
