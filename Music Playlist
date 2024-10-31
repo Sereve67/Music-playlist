@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define a structure for each song in the playlist
+struct Song {
+    char title[50];
+    char artist[50];
+    struct Song *next;
+};
+
+// Function to create a new song node
+struct Song* createSong(char *title, char *artist) {
+    struct Song newSong = (struct Song)malloc(sizeof(struct Song));
+    strcpy(newSong->title, title);
+    strcpy(newSong->artist, artist);
+    newSong->next = NULL;
+    return newSong;
+}
+
+// Function to add a song to the end of the playlist
+void addSong(struct Song **head, char *title, char *artist) {
+    struct Song *newSong = createSong(title, artist);
+    if (*head == NULL) {
+        *head = newSong;
+    } else {
+        struct Song *temp = *head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = newSong;
+    }
+}
+
+// Function to display all songs in the playlist
+void displayPlaylist(struct Song *head) {
+    if (head == NULL) {
+        printf("The playlist is empty.\n");
+        return;
+    }
+    struct Song *temp = head;
+    int count = 1;
+    while (temp != NULL) {
+        printf("Song %d: %s by %s\n", count, temp->title, temp->artist);
+        temp = temp->next;
+        count++;
+    }
+}
+
+// Function to delete a song by title
+void deleteSong(struct Song **head, char *title) {
+    if (*head == NULL) {
+        printf("The playlist is empty.\n");
+        return;
+    }
+
+    struct Song *temp = *head;
+    struct Song *prev = NULL;
+
+    // If the song to be deleted is the head node
+    if (strcmp(temp->title, title) == 0) {
+        *head = temp->next;
+        free(temp);
+        printf("Deleted song: %s\n", title);
+        return;
+    }
+
+    // Search for the song to be deleted
+    while (temp != NULL && strcmp(temp->title, title) != 0) {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    // If the song was not found
+    if (temp == NULL) {
+        printf("Song not found: %s\n", title);
+        return;
+    }
+
+    // Unlink the node and free memory
+    prev->next = temp->next;
+    free(temp);
+    printf("Deleted song: %s\n", title);
+}
+
+int main() {
+    struct Song *playlist = NULL;
+    int choice;
+    char title[50], artist[50];
+
+    do {
+        printf("\n1. Add Song\n2. Display Playlist\n3. Delete Song\n4. Exit\nChoose an option: ");
+        scanf("%d", &choice);
+        getchar(); // to consume the newline character
+
+        switch (choice) {
+            case 1:
+                printf("Enter song title: ");
+                fgets(title, sizeof(title), stdin);
+                title[strcspn(title, "\n")] = '\0'; // remove newline character
+
+                printf("Enter artist name: ");
+                fgets(artist, sizeof(artist), stdin);
+                artist[strcspn(artist, "\n")] = '\0'; // remove newline character
+
+                addSong(&playlist, title, artist);
+                printf("Song added to playlist.\n");
+                break;
+
+            case 2:
+                printf("Current Playlist:\n");
+                displayPlaylist(playlist);
+                break;
+
+            case 3:
+                printf("Enter the title of the song to delete: ");
+                fgets(title, sizeof(title), stdin);
+                title[strcspn(title, "\n")] = '\0'; // remove newline character
+
+                deleteSong(&playlist, title);
+                break;
+
+            case 4:
+                printf("Exiting...\n");
+                break;
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+                break;
+        }
+    } while (choice != 4);
+
+    return 0;
+}
